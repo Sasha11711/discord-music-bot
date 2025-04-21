@@ -1,15 +1,20 @@
-TOKEN = ""
-PREFIX = "!"
+from pathlib import Path
+
+PARENT_PATH = Path(__file__).parent.parent
+
+# Bot settings
+TOKEN = ''
+PREFIX = '!'
 
 YT_DLP_OPTIONS = {
-    "format": "bestaudio[abr<=64]/bestaudio",
+    'format': 'bestaudio[abr<=64]/bestaudio',
     "noplaylist": True,
     "youtube_include_dash_manifest": False,
     "youtube_include_hls_manifest": False,
-    "cookiefile": "/config/cookies.txt",
+    "cookiefile": f"{PARENT_PATH}/config/cookies.txt",
     # "cookiesfrombrowser": ("default", )
 }
-FFMPEG_EXECUTABLE = ""
+FFMPEG_EXECUTABLE = f"{PARENT_PATH}/ffmpeg/bin/ffmpeg.exe"
 FFMPEG_OPTIONS = {
     "before_options": "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5",
     "options": "-vn"
@@ -46,3 +51,8 @@ REPEAT_MESSAGE = "Repeat {0} for the current song."
 
 ON = "ON"
 OFF = "OFF"
+
+# Tray settings
+TRAY_ICON = f"{PARENT_PATH}/config/icon.png"
+TRAY_TITLE = "JokergeFM"
+TRAY_EXIT = "Exit"

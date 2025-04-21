@@ -44,7 +44,7 @@ def format_song(song, with_url: bool = True, elapsed: int = None) -> str:
     message = f"[{song['title']}]({song['url']})" if with_url else song['title']
     message += " - "
     if elapsed: message += format_time(elapsed) + "/"
-    message += format_time(song["duration"])
+    message += format_time(song['duration'])
     return message
 
 def get_required_votes(voice_channel: discord.VoiceChannel) -> int:
@@ -57,7 +57,7 @@ def is_url(url: str) -> bool:
 @bot.event
 async def on_ready():
     synced = await bot.tree.sync()
-    print(f"Synced {len(synced)} commands")
+    print(f'Synced {len(synced)} commands')
 
 @bot.event
 async def on_voice_state_update(member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
@@ -269,4 +269,8 @@ async def queue(interaction: discord.Interaction):
 
     await interaction.response.send_message(QUEUE_MESSAGE.format(message))
 
-bot.run(TOKEN)
+async def start():
+    return await bot.start(TOKEN)
+
+async def close():
+    await bot.close()
