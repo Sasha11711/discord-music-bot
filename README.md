@@ -5,7 +5,7 @@ This version uses system tray and has FFmpeg preinstalled.
 
 ## Setup
 
-1. Have [Python](https://www.python.org/downloads/) installed on your machine.
+1. Have [Python](https://www.python.org/downloads/) with pip installed on your machine.
 
 2. Download and unpack the code.
 
