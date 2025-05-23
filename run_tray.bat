@@ -8,7 +8,7 @@ if not exist venv (
 )
 if exist venv (
     call venv\Scripts\activate.bat
-    py -m pip install -r requirements.txt
+    py -m pip install --upgrade -r requirements.txt
     start /B pyw botTray.pyw
 ) else (
     echo Virtual environment not found.
