@@ -27,7 +27,7 @@ This version uses system tray and has FFmpeg preinstalled.
 
 ## Future Improvements
 
-- Making `/skip` `/stop` and `/disconnect` available if a user is alone with the bot.
+- ~~Making `/skip` `/stop` and `/disconnect` available if a user is alone with the bot.~~ Done
 
 Feel free to contribute or suggest improvements!
 
