@@ -3,6 +3,7 @@ import yt_dlp
 from discord.ext import commands
 from config.settings import *
 from classes.VoiceInfo import VoiceInfo
+from math import ceil
 
 intents = discord.Intents.default()
 bot = commands.Bot(command_prefix=PREFIX, intents=intents)
@@ -35,6 +36,16 @@ async def is_playing(interaction: discord.Interaction) -> bool:
         return False
     return True
 
+async def can_skip(interaction: discord.Interaction) -> bool:
+    if not await is_playing(interaction):
+        return False
+
+    if not interaction.user.guild_permissions.administrator and len(interaction.guild.voice_client.channel.members) > 2:
+        await interaction.response.send_message(ERROR_USER_SKIP_BLOCKED)
+        return False
+
+    return True
+
 def format_time(seconds: int) -> str:
     minutes = seconds // 60
     seconds = seconds % 60
@@ -48,7 +59,8 @@ def format_song(song, with_url: bool = True, elapsed: int = None) -> str:
     return message
 
 def get_required_votes(voice_channel: discord.VoiceChannel) -> int:
-    return int((len(voice_channel.members) - 1) * SKIP_VOTING_PERCENTAGE) + 1
+    user_count = len(voice_channel.members) - 1
+    return 2 if user_count == 2 else ceil(user_count * SKIP_VOTING_PERCENTAGE)
 
 def is_url(url: str) -> bool:
     return url.startswith(("https://youtu.be/", "https://www.youtube.com/watch?v="))
@@ -63,7 +75,7 @@ async def on_ready():
 async def on_voice_state_update(member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
     if member == bot.user:
         if before.channel and after.channel is None:
-            del voices_info[str(before.channel.guild.id)]
+            voices_info.pop(str(before.channel.guild.id), None)
     else:
         voice_client = member.guild.voice_client
         if  voice_client:
@@ -118,7 +130,8 @@ async def play(interaction: discord.Interaction, song: str):
         "url": song_result["url"]}
 
     if not voice_client:
-        voice_client = await voice.channel.connect(cls=discord.VoiceClient)
+        voice_client = await voice.channel.connect(self_deaf=True)
+    if guild_id not in voices_info:
         voices_info[guild_id] = VoiceInfo()
     voices_info[guild_id].queue.append(song_info)
 
@@ -133,16 +146,12 @@ async def play_next(voice_client: discord.VoiceClient, guild_id: str, repeated_s
 
     voice_info = voices_info[guild_id]
 
-    song_info = repeated_song_info
     if repeated_song_info:
         song_info = repeated_song_info
-    else:
+    elif voice_info.queue:
         voice_info.skip_votes = []
-
-        if not voice_info.queue:
-            return
-        
         song_info = voice_info.queue[0]
+    else: return
     
     source = discord.FFmpegPCMAudio(song_info["url"], **FFMPEG_OPTIONS, executable=FFMPEG_EXECUTABLE)
     
@@ -152,7 +161,7 @@ async def play_next(voice_client: discord.VoiceClient, guild_id: str, repeated_s
             print(f"Error playing audio: {error}")
         if voice_info.is_repeating:
             bot.loop.create_task(play_next(voice_client, guild_id, song_info))
-        else:
+        elif voice_info.queue:
             del voice_info.queue[0]
             bot.loop.create_task(play_next(voice_client, guild_id))
 
@@ -186,13 +195,9 @@ async def skip_vote(interaction: discord.Interaction):
 
 @bot.tree.command(name="skip", description=COMMAND_SKIP_DESCRIPTION)
 async def skip(interaction: discord.Interaction):
-    if not await is_playing(interaction):
+    if not await can_skip(interaction):
         return
-    
-    if not interaction.user.guild_permissions.administrator:
-        await interaction.response.send_message(ERROR_USER_SKIP_BLOCKED)
-        return
-    
+
     voice_info = voices_info[str(interaction.guild_id)]
 
     voice_info.is_repeating = False
@@ -201,11 +206,7 @@ async def skip(interaction: discord.Interaction):
 
 @bot.tree.command(name="stop", description=COMMAND_STOP_DESCRIPTION)
 async def stop(interaction: discord.Interaction):
-    if not await is_playing(interaction):
-        return
-    
-    if not interaction.user.guild_permissions.administrator:
-        await interaction.response.send_message(ERROR_USER_SKIP_BLOCKED)
+    if not await can_skip(interaction):
         return
 
     voice_info = voices_info[str(interaction.guild_id)]
@@ -221,11 +222,11 @@ async def stop(interaction: discord.Interaction):
 async def disconnect(interaction: discord.Interaction):
     if not await can_use(interaction):
         return
-    
-    if not interaction.user.guild_permissions.administrator:
+
+    if not interaction.user.guild_permissions.administrator and len(interaction.guild.voice_client.channel.members) > 2:
         await interaction.response.send_message(ERROR_USER_SKIP_BLOCKED)
         return
-    
+
     await interaction.response.send_message(DISCONNECT_MESSAGE)
     await interaction.guild.voice_client.disconnect()
 
