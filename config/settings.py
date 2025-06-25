@@ -1,3 +1,7 @@
+from pathlib import Path
+
+PARENT_PATH = Path(__file__).parent.parent
+
 TOKEN = ""
 PREFIX = "!"
 
@@ -6,7 +10,7 @@ YT_DLP_OPTIONS = {
     "noplaylist": True,
     "youtube_include_dash_manifest": False,
     "youtube_include_hls_manifest": False,
-    "cookiefile": "/config/cookies.txt",
+    "cookiefile": f"{PARENT_PATH}/config/cookies.txt",
     # "cookiesfrombrowser": ("default", )
 }
 FFMPEG_EXECUTABLE = ""
