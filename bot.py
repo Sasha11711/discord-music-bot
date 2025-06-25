@@ -109,7 +109,10 @@ async def play(interaction: discord.Interaction, song: str):
         await interaction.followup.send(ERROR_WRONG_VOICE_CHANNEL)
         return
     
-    song_result = None
+    si_index = song.find("si=")
+    if si_index != -1:
+        song = song[0:si_index - 1]
+    
     if is_url(song):
         result = await bot.loop.run_in_executor(None, lambda: yt_dlp.YoutubeDL(YT_DLP_OPTIONS).extract_info(song, download=False))
         if result is None:
